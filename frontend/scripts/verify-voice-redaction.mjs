@@ -1,13 +1,17 @@
 /**
  * Epic 7 item 3 — voice transcript redaction before POST /api/voice/question.
- * Calls prepareVoiceQuestion() directly (no mic). Mocks Redis write via fetch.
+ * Exercises the same redact + saveTokenMap path as prepareVoiceQuestion(), but uses
+ * regex-only detection in Node (see verify-translate.mjs). Static import of
+ * prepareVoiceQuestion pulls detect.js → ner.js → onnxruntime-node, which fails on
+ * macOS versions below the native binary's deployment target — browser NER is unaffected.
  *
  * Run: npm run verify:voice-redaction --prefix frontend
  */
-import { prepareVoiceQuestion } from '../src/voice/prepareVoiceQuestion.js';
 import { detectRegexSpans } from '../src/pii/regex/index.js';
 import { validateSpans } from '../src/pii/resolveEntityOffsets.js';
 import { mergeSpansWithDropped } from '../src/pii/mergeSpans.js';
+import { redact } from '../src/pii/redact.js';
+import { saveTokenMap } from '../src/api/passage.js';
 import { extractTokens } from '../src/utils/redactedText.js';
 
 const SESSION_ID = 'verify-voice-redaction-session';
@@ -62,6 +66,33 @@ function printCaseHeader(title) {
   console.log('='.repeat(72));
 }
 
+/** Regex-only mirror of prepareVoiceQuestion() — same redaction boundary, no Node NER import. */
+async function prepareVoiceQuestionRegexOnly(rawTranscript, sessionId, existingTokenMap = {}) {
+  const trimmed = rawTranscript.trim();
+  if (!trimmed) throw new Error('Transcript is empty');
+
+  const regexOnly = validateSpans(detectRegexSpans(trimmed), trimmed);
+  const { redacted, tokenMap: newTokens } = redact(
+    trimmed,
+    mergeSpansWithDropped(regexOnly).kept,
+    sessionId,
+    existingTokenMap,
+  );
+
+  const mergedMap = { ...existingTokenMap, ...newTokens };
+  if (Object.keys(newTokens).length > 0) {
+    await saveTokenMap(sessionId, mergedMap);
+  }
+
+  for (const raw of Object.values(newTokens)) {
+    if (raw.length >= 4 && redacted.includes(raw)) {
+      throw new Error('Voice redaction failed — raw value survived tokenization');
+    }
+  }
+
+  return { redacted, tokenMap: mergedMap, newTokens };
+}
+
 async function runRedactionCase({ title, rawTranscript, rawValuesToBan, expectLeak = false }) {
   printCaseHeader(title);
 
@@ -69,11 +100,10 @@ async function runRedactionCase({ title, rawTranscript, rawValuesToBan, expectLe
   console.log(`   "${rawTranscript}"`);
 
   fetchLog.length = 0;
-  const { redacted, tokenMap, newTokens } = await prepareVoiceQuestion(
+  const { redacted, tokenMap, newTokens } = await prepareVoiceQuestionRegexOnly(
     rawTranscript,
     SESSION_ID,
     EXISTING_DOC_TOKENS,
-    { detectOptions: { includeNer: false } },
   );
 
   console.log('\n2) detectPii (regex-only in Node verify) + redact produced:');
@@ -122,7 +152,7 @@ async function main() {
   installFetchMock();
 
   console.log('=== verify-voice-redaction.mjs ===');
-  console.log('Path: prepareVoiceQuestion() → buildVoiceQuestionBody() (same as askVoiceQuestion)\n');
+  console.log('Path: prepareVoiceQuestionRegexOnly() → buildVoiceQuestionBody() (regex-only in Node)\n');
 
   const FAKE_A = 'A123456789';
   const rawA = `my A-number is ${FAKE_A}, what does this letter mean`;
@@ -162,7 +192,7 @@ async function main() {
     );
   }
 
-  console.log('\n  Running prepareVoiceQuestion on conversational DOB (expect NO tokenization):');
+  console.log('\n  Running regex-only voice redaction on conversational DOB (expect NO tokenization):');
   await runRedactionCase({
     title: 'CASE B1 — conversational DOB through full pipeline',
     rawTranscript: conversationalDob,
@@ -170,7 +200,7 @@ async function main() {
     expectLeak: true,
   });
 
-  console.log('\n  Running prepareVoiceQuestion on STT-written DOB (expect tokenization):');
+  console.log('\n  Running regex-only voice redaction on STT-written DOB (expect tokenization):');
   const caseB2 = await runRedactionCase({
     title: 'CASE B2 — STT written DOB through full pipeline',
     rawTranscript: sttWrittenDob,

@@ -1,6 +1,6 @@
 import { getRedisClient } from './redis.js';
 
-const TTL_SECONDS = 900;
+export const TTL_SECONDS = 900;
 
 export function sessionKey(sessionId) {
   return `session:${sessionId}:tokens`;

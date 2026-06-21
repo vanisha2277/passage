@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as Sentry from '@sentry/node';
 import { grantDeepgramToken, synthesizeExplanationSpeech } from '../deepgram.js';
 import { answerVoiceQuestion } from '../translate.js';
+import { readVoiceTurns, appendVoiceTurn } from '../voiceSessionHistory.js';
 
 const router = Router();
 
@@ -42,13 +43,20 @@ router.post('/voice/question', async (req, res) => {
   }
 
   try {
+    const priorTurns = sessionId ? await readVoiceTurns(sessionId) : [];
     const { answerText, traceId } = await answerVoiceQuestion({
       redactedContext,
       redactedQuestion,
       targetLanguage,
       sessionId,
+      priorTurns,
     });
-    res.json({ ok: true, answer_text: answerText, trace_id: traceId });
+
+    if (sessionId) {
+      await appendVoiceTurn(sessionId, redactedQuestion, answerText);
+    }
+
+    res.json({ ok: true, answer_text: answerText, trace_id: traceId, prior_turns: priorTurns.length });
   } catch (err) {
     Sentry.captureException(err, { tags: { path: 'voice-question' } });
     res.status(503).json({ ok: false, error: err.message });

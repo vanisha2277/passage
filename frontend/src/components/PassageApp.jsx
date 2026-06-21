@@ -14,6 +14,8 @@ import { captureValidationFailure } from '../monitoring/sentry.js';
 import { PLANTED_FAILURE_TEXT } from '../test-docs/plantedFailureDoc.js';
 import VoiceQuestion from './VoiceQuestion.jsx';
 import ExplanationTts from './ExplanationTts.jsx';
+import DocumentLibrary from './DocumentLibrary.jsx';
+import { LANGUAGES, languageNameFromCode } from '../data/languages.js';
 import './PassageApp.css';
 
 const SAMPLE_TEXT = `Notice to Appear
@@ -47,8 +49,10 @@ function hasUndetectedAddressLeak(redacted) {
 }
 
 export default function PassageApp() {
+  const [appView, setAppView] = useState('translate');
   const [text, setText] = useState(SAMPLE_TEXT);
-  const [targetLanguage, setTargetLanguage] = useState('Spanish');
+  const [languageCode, setLanguageCode] = useState('es');
+  const targetLanguage = languageNameFromCode(languageCode);
   const [phase, setPhase] = useState('paste');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -194,7 +198,26 @@ export default function PassageApp() {
 
   return (
     <div className="passage-app">
-      {phase === 'paste' && (
+      <nav className="app-nav" aria-label="Main sections">
+        <button
+          type="button"
+          className={appView === 'translate' ? 'nav-tab active' : 'nav-tab'}
+          onClick={() => setAppView('translate')}
+        >
+          Translate
+        </button>
+        <button
+          type="button"
+          className={appView === 'reference' ? 'nav-tab active' : 'nav-tab'}
+          onClick={() => setAppView('reference')}
+        >
+          Form reference
+        </button>
+      </nav>
+
+      {appView === 'reference' && <DocumentLibrary />}
+
+      {appView === 'translate' && phase === 'paste' && (
         <section className="card">
           <h2>Paste document section</h2>
           <p className="hint">PII detection runs in your browser. Nothing is sent until you press Send for translation.</p>
@@ -212,12 +235,17 @@ export default function PassageApp() {
           </div>
           <label className="lang-label">
             Target language
-            <input
-              className="lang-input"
-              value={targetLanguage}
-              onChange={(e) => setTargetLanguage(e.target.value)}
-              placeholder="Spanish"
-            />
+            <select
+              className="lang-select"
+              value={languageCode}
+              onChange={(e) => setLanguageCode(e.target.value)}
+            >
+              {LANGUAGES.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.flag} {lang.name} ({lang.native})
+                </option>
+              ))}
+            </select>
           </label>
           <button type="button" onClick={handleRedact} disabled={loading || !text.trim()}>
             {loading ? 'Redacting…' : 'Redact'}
@@ -225,7 +253,7 @@ export default function PassageApp() {
         </section>
       )}
 
-      {phase === 'preview' && (
+      {appView === 'translate' && phase === 'preview' && (
         <section className="card">
           <h2>Scrubbed preview</h2>
           <p className="hint">
@@ -318,7 +346,7 @@ export default function PassageApp() {
         </section>
       )}
 
-      {phase === 'result' && translation && reinsertedText && (
+      {appView === 'translate' && phase === 'result' && translation && reinsertedText && (
         <section className="card result-screen">
           <h2>Translation result</h2>
           <p className="hint">

@@ -264,6 +264,143 @@ details summary {
   margin-bottom: 1rem;
 }
 
+.app-nav {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.nav-tab {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  font-size: 0.9rem;
+  padding: 0.45rem 0.9rem;
+}
+
+.nav-tab.active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+.lang-select {
+  display: block;
+  margin-top: 0.35rem;
+  width: 100%;
+  max-width: 320px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: #fff;
+}
+
+.document-library .doc-lib-layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 280px) 1fr;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .document-library .doc-lib-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.doc-lib-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.doc-lib-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  padding: 0.65rem 0.85rem;
+  background: #fff;
+  color: #111827;
+  border: none;
+  border-bottom: 1px solid #f3f4f6;
+  border-radius: 0;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.doc-lib-item:hover {
+  background: #f9fafb;
+}
+
+.doc-lib-item.active {
+  background: #eff6ff;
+  border-left: 3px solid #2563eb;
+}
+
+.doc-lib-code {
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #1d4ed8;
+}
+
+.doc-lib-title {
+  font-size: 0.78rem;
+  color: #4b5563;
+  margin-top: 0.15rem;
+  line-height: 1.35;
+}
+
+.doc-lib-detail h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.doc-lib-agency {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.doc-lib-description {
+  margin: 0 0 1rem;
+  line-height: 1.55;
+  font-size: 0.9rem;
+}
+
+.doc-lib-detail h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.doc-lib-related-intro {
+  margin-bottom: 0.75rem;
+}
+
+.doc-lib-related {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.doc-lib-related li {
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.doc-lib-related-note {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: #555;
+}
+
 .voice-question {
   margin: 1.5rem 0;
   padding: 1rem;
