@@ -1,0 +1,7 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    # In-memory only — no RDB/AOF persistence for session token keyspace
+    command: redis-server --save "" --appendonly no

@@ -1,0 +1,19 @@
+{
+  "name": "passage-backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "verify:session-tokens": "node scripts/verify-session-tokens.mjs",
+    "trigger:sentry-validation": "node scripts/trigger-sentry-validation.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@sentry/node": "^9.47.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "redis": "^4.7.0"
+  }
+}
