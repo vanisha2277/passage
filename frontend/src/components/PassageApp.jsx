@@ -13,6 +13,7 @@ import {
 import { captureValidationFailure } from '../monitoring/sentry.js';
 import { PLANTED_FAILURE_TEXT } from '../test-docs/plantedFailureDoc.js';
 import VoiceQuestion from './VoiceQuestion.jsx';
+import ExplanationTts from './ExplanationTts.jsx';
 import './PassageApp.css';
 
 const SAMPLE_TEXT = `Notice to Appear
@@ -36,9 +37,12 @@ function tooltipForToken(token, tokenMeta) {
 }
 
 /** True when raw address-like text survived redaction (planted failure case). */
-function hasUndetectedAddressLeak(redacted, spans) {
-  const hadAddressSpan = spans.some((s) => s.type === 'ADDRESS');
-  if (hadAddressSpan) return false;
+function hasUndetectedAddressLeak(redacted) {
+  // Unit/apartment ids left as plain text — even if NER tokenized city/state around them
+  if (/\bApt\s*#\s*[A-Za-z0-9-]+\b/i.test(redacted)) {
+    return true;
+  }
+  // Full street-shape address missed by regex (no house-number + suffix match)
   return /Apt\s*#\d+[A-Z]?,\s*[A-Za-z\s]+,\s*[A-Z]{2}\s+\d{5}/.test(redacted);
 }
 
@@ -95,9 +99,9 @@ export default function PassageApp() {
       setTokenMeta(meta);
       setPhase('preview');
 
-      if (hasUndetectedAddressLeak(redactedText, detectResult.spans)) {
+      if (hasUndetectedAddressLeak(redactedText)) {
         setDetectionWarning(
-          'Detection gap: address text (Apt #4B…) was not tokenized — raw address remains in scrubbed preview. Do not send until re-redacted or manually reviewed.',
+          'Detection gap: address text (Apt #4B…) was not fully tokenized — raw fragments remain in the scrubbed preview. Send is blocked until you re-redact or edit the source text.',
         );
       }
 
@@ -142,6 +146,10 @@ export default function PassageApp() {
   }
 
   async function handleSend() {
+    if (detectionWarning) {
+      setError('Send blocked — fix detection gaps in the scrubbed preview before translating.');
+      return;
+    }
     setSending(true);
     setError(null);
     setValidationFailure(null);
@@ -261,8 +269,8 @@ export default function PassageApp() {
             <button type="button" className="btn-secondary" onClick={handleEditAgain}>
               Edit &amp; re-redact
             </button>
-            <button type="button" onClick={handleSend} disabled={sending || !redacted}>
-              {sending ? 'Sending…' : 'Send for translation'}
+            <button type="button" onClick={handleSend} disabled={sending || !redacted || Boolean(detectionWarning)}>
+              {sending ? 'Sending…' : detectionWarning ? 'Send blocked (detection gap)' : 'Send for translation'}
             </button>
           </div>
 
@@ -330,6 +338,12 @@ export default function PassageApp() {
           </div>
 
           <p className="hint meta-line">trace_id: {translation.trace_id} · session: {sessionId?.slice(0, 8)}…</p>
+
+          <ExplanationTts
+            claudeTokenizedText={translation.translated_text}
+            targetLanguage={targetLanguage}
+            label="Listen to explanation"
+          />
 
           <VoiceQuestion
             sessionId={sessionId}

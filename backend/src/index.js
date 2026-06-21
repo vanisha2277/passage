@@ -1,4 +1,3 @@
-import './phoenix/instrumentation.js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -12,6 +11,11 @@ import voiceRoutes from './routes/voice.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+// Epic 5 — optional; backend still runs if Phoenix packages are not installed
+import('./phoenix/instrumentation.js').catch((err) => {
+  console.warn('Phoenix instrumentation skipped:', err.message);
+});
 
 const app = express();
 const PORT = process.env.PORT || 3001;

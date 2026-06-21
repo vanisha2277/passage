@@ -395,3 +395,40 @@ details summary {
   margin: 0 0 0.35rem;
   font-size: 0.95rem;
 }
+
+.explanation-tts {
+  margin: 1rem 0;
+  padding: 0.75rem 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.explanation-tts-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-tts {
+  font: inherit;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+  cursor: pointer;
+}
+
+.btn-tts:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tts-meta {
+  font-size: 0.8rem;
+}
+
+.tts-preview-details {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}

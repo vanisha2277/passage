@@ -13,7 +13,10 @@
     "verify:redis": "node scripts/verify-redis.mjs",
     "verify:translate": "node scripts/verify-translate.mjs",
     "verify:reinsert": "node scripts/verify-reinsert-ui.mjs",
-    "verify:voice-redaction": "node scripts/verify-voice-redaction.mjs"
+    "verify:voice-redaction": "node scripts/verify-voice-redaction.mjs",
+    "verify:stt-smart-format": "node scripts/verify-stt-smart-format.mjs",
+    "verify:explanation-tts": "node scripts/verify-explanation-tts.mjs",
+    "verify:voice-roundtrip": "node scripts/verify-voice-roundtrip.mjs"
   },
   "dependencies": {
     "@deepgram/sdk": "^5.4.0",

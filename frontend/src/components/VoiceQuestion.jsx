@@ -3,6 +3,7 @@ import { startLiveTranscription } from '../voice/deepgramStt.js';
 import { prepareVoiceQuestion } from '../voice/prepareVoiceQuestion.js';
 import { askVoiceQuestion } from '../api/passage.js';
 import { extractTokens } from '../utils/redactedText.js';
+import ExplanationTts from './ExplanationTts.jsx';
 
 const MIC_NUDGE =
   'Please type ID numbers — don\u2019t say them out loud. Spoken questions go to Deepgram; avoid speaking A-numbers, SSNs, or passport numbers.';
@@ -179,6 +180,11 @@ export default function VoiceQuestion({ sessionId, redactedContext, targetLangua
           <h4>Claude&apos;s answer</h4>
           <p className="hint">trace_id: {answer.trace_id}</p>
           <pre className="voice-answer-text">{answer.answer_text}</pre>
+          <ExplanationTts
+            claudeTokenizedText={answer.answer_text}
+            targetLanguage={targetLanguage}
+            label="Listen to answer"
+          />
         </div>
       )}
     </section>

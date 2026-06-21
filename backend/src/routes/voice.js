@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as Sentry from '@sentry/node';
-import { grantDeepgramToken } from '../deepgram.js';
+import { grantDeepgramToken, synthesizeExplanationSpeech } from '../deepgram.js';
 import { answerVoiceQuestion } from '../translate.js';
 
 const router = Router();
@@ -51,6 +51,30 @@ router.post('/voice/question', async (req, res) => {
     res.json({ ok: true, answer_text: answerText, trace_id: traceId });
   } catch (err) {
     Sentry.captureException(err, { tags: { path: 'voice-question' } });
+    res.status(503).json({ ok: false, error: err.message });
+  }
+});
+
+/**
+ * TTS for Claude explanation text only — tokenized, pre-reinsertion.
+ * Never pass reinserted side-by-side display text here.
+ */
+router.post('/voice/tts', async (req, res) => {
+  const { text, target_language: targetLanguage } = req.body ?? {};
+
+  if (!text || typeof text !== 'string') {
+    return res.status(400).json({ ok: false, error: 'text is required' });
+  }
+  if (!targetLanguage || typeof targetLanguage !== 'string') {
+    return res.status(400).json({ ok: false, error: 'target_language is required' });
+  }
+
+  try {
+    const audio = await synthesizeExplanationSpeech(text, targetLanguage);
+    res.set('Content-Type', 'audio/mpeg');
+    res.send(audio);
+  } catch (err) {
+    Sentry.captureException(err, { tags: { path: 'deepgram-tts' } });
     res.status(503).json({ ok: false, error: err.message });
   }
 });
