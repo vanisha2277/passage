@@ -29,6 +29,7 @@ Please submit copies of your tax returns for 2022 and 2023 within 87 days of thi
     label: 'Planted failure — Apt #4B (address miss)',
     text: `Please send documents to Apt #4B, Brooklyn, NY 11201. Respondent Maria Gonzalez must comply within 30 days of this notice.`,
     trueSpans: [
+      { type: 'ADDRESS', start: 25, end: 52, value: 'Apt #4B, Brooklyn, NY 11201' },
       { type: 'NAME', start: 65, end: 79, value: 'Maria Gonzalez' },
     ],
     notes: 'Address Apt #4B intentionally undetected — Sentry demo case',
@@ -96,10 +97,10 @@ Old Address: 88 Pine Street, Seattle, WA 98101
 New Address: 410 Oak Road, Portland, OR 97201
 A-Number: A556677889`,
     trueSpans: [
-      { type: 'NAME', start: 35, end: 44, value: 'Sofia Lin' },
-      { type: 'ADDRESS', start: 59, end: 73, value: '88 Pine Street' },
-      { type: 'ADDRESS', start: 99, end: 111, value: '410 Oak Road' },
-      { type: 'A_NUMBER', start: 135, end: 145, value: 'A556677889' },
+      { type: 'NAME', start: 38, end: 47, value: 'Sofia Lin' },
+      { type: 'ADDRESS', start: 61, end: 75, value: '88 Pine Street' },
+      { type: 'ADDRESS', start: 108, end: 120, value: '410 Oak Road' },
+      { type: 'A_NUMBER', start: 151, end: 161, value: 'A556677889' },
     ],
   },
   {

@@ -8,7 +8,7 @@ One-line pitch: translates and explains immigration paperwork, your identity nev
 ## Live demo (3m40s)
 1. **(45s)** Paste a synthetic RFE letter. Show the scrubbed preview — tokens highlighted amber. Tap one token to show the verify tooltip.
 2. **(40s)** Press "send for translation." Open devtools/network tab — show only `⟦PII:...⟧` tokens in the request payload. *This is the privacy proof — make it visible, don't just claim it.*
-3. **(40s)** Switch to the pre-loaded planted-failure document. Trigger it. Sentry fires live. Show the dashboard.
+3. **(40s)** Load the planted-failure doc, redact, and send — we deliberately force a token mismatch on `/api/translate` to demonstrate fail-closed validation (output blocked, Sentry fires with token keys only). Show the Sentry dashboard.
 4. **(30s)** Switch to Arize Phoenix, show recall trending across the test set.
 5. **(45s)** Ask a question by voice — "what is this letter asking me to do?" Deepgram transcribes, Claude answers, Deepgram reads it back in the target language.
 6. **(20s)** Show the final result screen: real data reinserted, original and translated side by side.

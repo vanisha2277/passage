@@ -1,3 +1,4 @@
+import './phoenix/instrumentation.js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -7,6 +8,7 @@ import { helloClaude } from './anthropic.js';
 import { pingRedis } from './redis.js';
 import sessionRoutes from './routes/session.js';
 import translateRoutes from './routes/translate.js';
+import voiceRoutes from './routes/voice.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
@@ -45,6 +47,7 @@ app.get('/api/health/anthropic', async (_req, res) => {
 
 app.use('/api', sessionRoutes);
 app.use('/api', translateRoutes);
+app.use('/api', voiceRoutes);
 
 app.listen(PORT, () => {
   console.log(`Backend listening on http://localhost:${PORT}`);

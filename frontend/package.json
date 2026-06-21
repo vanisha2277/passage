@@ -11,9 +11,12 @@
     "verify:redact": "node scripts/verify-redact.mjs",
     "verify:validation": "node scripts/verify-validation.mjs",
     "verify:redis": "node scripts/verify-redis.mjs",
-    "verify:translate": "node scripts/verify-translate.mjs"
+    "verify:translate": "node scripts/verify-translate.mjs",
+    "verify:reinsert": "node scripts/verify-reinsert-ui.mjs",
+    "verify:voice-redaction": "node scripts/verify-voice-redaction.mjs"
   },
   "dependencies": {
+    "@deepgram/sdk": "^5.4.0",
     "@huggingface/transformers": "^4.2.0",
     "@sentry/react": "^10.59.0",
     "react": "^19.0.0",

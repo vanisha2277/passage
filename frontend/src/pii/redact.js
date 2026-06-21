@@ -24,10 +24,11 @@ export function parseToken(token) {
  * @param {string} text — original pasted document text
  * @param {import('./types.js').DetectedSpan[]} spans — merged, non-overlapping spans
  * @param {string} sessionId — scopes per-type counters (unique within session)
- * @returns {{ redacted: string, tokenMap: Record<string, string> }}
+ * @param {Record<string, string>} [existingTokenMap] — continue TYPE:n counters within session
+ * @returns {{ redacted: string, tokenMap: Record<string, string>, tokenMeta: Record<string, object> }}
  */
-export function redact(text, spans, sessionId) {
-  void sessionId; // reserved for Redis key in Epic 2 item 2; counters reset per redact call
+export function redact(text, spans, sessionId, existingTokenMap = {}) {
+  void sessionId;
 
   const valid = spans
     .filter(
@@ -42,6 +43,13 @@ export function redact(text, spans, sessionId) {
 
   /** @type {Record<string, number>} */
   const typeCounters = {};
+  for (const token of Object.keys(existingTokenMap)) {
+    const parsed = parseToken(token);
+    if (parsed) {
+      typeCounters[parsed.type] = Math.max(typeCounters[parsed.type] ?? 0, parsed.index);
+    }
+  }
+
   /** @type {Record<string, string>} */
   const tokenMap = {};
 

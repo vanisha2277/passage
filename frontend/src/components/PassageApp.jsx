@@ -2,15 +2,17 @@ import { useState } from 'react';
 import { detectPii, detectRegexSpans, mergeSpansWithDropped } from '../pii/detect.js';
 import { validateSpans } from '../pii/resolveEntityOffsets.js';
 import { redact } from '../pii/redact.js';
-import { saveTokenMap, translateDocument } from '../api/passage.js';
+import { saveTokenMap, translateDocument, fetchTokenMap } from '../api/passage.js';
 import { createSessionId } from '../utils/sessionId.js';
 import { splitRedactedText, TYPE_COLORS, tokenType } from '../utils/redactedText.js';
+import { reinsert } from '../utils/reinsert.js';
 import {
   validateTranslationTokens,
   noRawPiiLeak,
 } from '../validation/validateTranslation.js';
 import { captureValidationFailure } from '../monitoring/sentry.js';
 import { PLANTED_FAILURE_TEXT } from '../test-docs/plantedFailureDoc.js';
+import VoiceQuestion from './VoiceQuestion.jsx';
 import './PassageApp.css';
 
 const SAMPLE_TEXT = `Notice to Appear
@@ -53,6 +55,7 @@ export default function PassageApp() {
   const [tokenMeta, setTokenMeta] = useState({});
   const [spans, setSpans] = useState([]);
   const [translation, setTranslation] = useState(null);
+  const [reinsertedText, setReinsertedText] = useState('');
   const [validationFailure, setValidationFailure] = useState(null);
   const [sending, setSending] = useState(false);
   const [detectionWarning, setDetectionWarning] = useState('');
@@ -62,6 +65,7 @@ export default function PassageApp() {
     setError(null);
     setRedisNote('');
     setTranslation(null);
+    setReinsertedText('');
     setValidationFailure(null);
     setDetectionWarning('');
 
@@ -121,6 +125,7 @@ export default function PassageApp() {
     setTokenMeta({});
     setSessionId(null);
     setTranslation(null);
+    setReinsertedText('');
     setValidationFailure(null);
     setDetectionWarning('');
     setRedisNote('');
@@ -130,6 +135,7 @@ export default function PassageApp() {
     setText(PLANTED_FAILURE_TEXT);
     setPhase('paste');
     setTranslation(null);
+    setReinsertedText('');
     setValidationFailure(null);
     setDetectionWarning('');
     setError(null);
@@ -140,11 +146,9 @@ export default function PassageApp() {
     setError(null);
     setValidationFailure(null);
     setTranslation(null);
+    setReinsertedText('');
 
     try {
-      const payload = { redacted, sessionId, targetLanguage };
-      console.log('Send for translation:', payload);
-
       const result = await translateDocument({
         redactedText: redacted,
         targetLanguage,
@@ -165,7 +169,12 @@ export default function PassageApp() {
         return;
       }
 
+      const { token_map: redisMap } = await fetchTokenMap(sessionId);
+      const finalText = reinsert(result.translated_text, redisMap);
+
       setTranslation(result);
+      setReinsertedText(finalText);
+      setPhase('result');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -258,13 +267,25 @@ export default function PassageApp() {
           </div>
 
           <details>
-            <summary>Token map ({Object.keys(tokenMap).length}) — session {sessionId?.slice(0, 8)}…</summary>
-            <pre className="span-log">{JSON.stringify(tokenMap, null, 2)}</pre>
+            <summary>Token keys ({Object.keys(tokenMap).length}) — session {sessionId?.slice(0, 8)}…</summary>
+            <pre className="span-log">{JSON.stringify(Object.keys(tokenMap), null, 2)}</pre>
           </details>
 
           <details>
-            <summary>Detected spans ({spans.length})</summary>
-            <pre className="span-log">{JSON.stringify(spans, null, 2)}</pre>
+            <summary>Detected spans ({spans.length}) — types &amp; offsets only</summary>
+            <pre className="span-log">
+              {JSON.stringify(
+                spans.map(({ type, start, end, source, confidence }) => ({
+                  type,
+                  start,
+                  end,
+                  source,
+                  confidence,
+                })),
+                null,
+                2,
+              )}
+            </pre>
           </details>
 
           {validationFailure && (
@@ -286,14 +307,42 @@ export default function PassageApp() {
               </button>
             </div>
           )}
+        </section>
+      )}
 
-          {translation && !validationFailure && (
-            <div className="translation-result">
-              <h3>Translation + explanation</h3>
-              <p className="hint">trace_id: {translation.trace_id}</p>
-              <pre className="translation-text">{translation.translated_text}</pre>
+      {phase === 'result' && translation && reinsertedText && (
+        <section className="card result-screen">
+          <h2>Translation result</h2>
+          <p className="hint">
+            Real values are reinserted client-side from your session only — they appear on this screen and are not sent
+            to Sentry or Phoenix.
+          </p>
+
+          <div className="side-by-side">
+            <div className="panel panel-original">
+              <h3>Original</h3>
+              <pre className="panel-text">{text}</pre>
             </div>
-          )}
+            <div className="panel panel-translated">
+              <h3>Translated + explained ({targetLanguage})</h3>
+              <pre className="panel-text">{reinsertedText}</pre>
+            </div>
+          </div>
+
+          <p className="hint meta-line">trace_id: {translation.trace_id} · session: {sessionId?.slice(0, 8)}…</p>
+
+          <VoiceQuestion
+            sessionId={sessionId}
+            redactedContext={redacted}
+            targetLanguage={targetLanguage}
+            tokenMap={tokenMap}
+          />
+
+          <div className="preview-actions">
+            <button type="button" className="btn-secondary" onClick={handleEditAgain}>
+              Translate another section
+            </button>
+          </div>
         </section>
       )}
 

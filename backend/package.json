@@ -6,10 +6,13 @@
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
     "verify:session-tokens": "node scripts/verify-session-tokens.mjs",
-    "trigger:sentry-validation": "node scripts/trigger-sentry-validation.mjs"
+    "trigger:sentry-validation": "node scripts/trigger-sentry-validation.mjs",
+    "score:phoenix": "node scripts/run-phoenix-scoring.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@arizeai/openinference-instrumentation-anthropic": "^0.1.13",
+    "@arizeai/phoenix-otel": "^1.0.2",
     "@sentry/node": "^9.47.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",

@@ -46,3 +46,39 @@ export async function translateDocument({ redactedText, targetLanguage, sessionI
   }
   return data;
 }
+
+/** Short-lived Deepgram token for browser STT (never the raw API key). */
+export async function fetchVoiceToken() {
+  const res = await fetch(`${API_BASE}/api/voice/token`);
+  const data = await res.json();
+  if (!res.ok || !data.ok) {
+    throw new Error(data.error ?? `Voice token failed (${res.status})`);
+  }
+  return data;
+}
+
+/**
+ * @param {{
+ *   transcript: string,
+ *   sessionId: string,
+ *   redactedContext: string,
+ *   targetLanguage: string,
+ * }} params — transcript must already be token-substituted client-side
+ */
+export async function askVoiceQuestion({ transcript, sessionId, redactedContext, targetLanguage }) {
+  const res = await fetch(`${API_BASE}/api/voice/question`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      transcript,
+      session_id: sessionId,
+      redacted_context: redactedContext,
+      target_language: targetLanguage,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.ok) {
+    throw new Error(data.error ?? `Voice question failed (${res.status})`);
+  }
+  return data;
+}

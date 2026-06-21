@@ -10,7 +10,9 @@
     "redis:down": "docker compose down",
     "verify:redis": "npm run verify:redis --prefix frontend",
     "verify:session-tokens": "node backend/scripts/verify-session-tokens.mjs",
-    "verify:translate": "npm run verify:translate --prefix frontend"
+    "verify:translate": "npm run verify:translate --prefix frontend",
+    "phoenix:serve": ".phoenix-venv/bin/python -m phoenix.server.main serve",
+    "score:phoenix": "npm run score:phoenix --prefix backend"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
